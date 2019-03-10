@@ -1,9 +1,7 @@
 # OpenAir
 This is just some graphs from OpenAir Package using "mydata"
 
-# ==========#
-# Libraries #
-# ==========#
+# Libraries
 library(zoo)
 library(openair)
 library(plyr)
@@ -23,51 +21,49 @@ tail(mydata)
 # Organizing the Data #
 # =================== #
 
-# Adding Days
+
 mydata <- mydata %>% 
-  mutate(Day = substring(mydata$date,9,10))
+  mutate(Day = substring(mydata$date,9,10))     # Adding Days
 mydata$Day  <- as.numeric(mydata$Day)
 
-# Adding Months
+
 mydata <- mydata %>% 
-  mutate(Month = substring(mydata$date,6,7))
+  mutate(Month = substring(mydata$date,6,7))     # Adding Months
 mydata$Month  <- as.numeric(mydata$Month)
 
-# Adding Years
+
 mydata <- mydata %>% 
-  mutate(Year = substring(mydata$date,1,4))
+  mutate(Year = substring(mydata$date,1,4))     # Adding Years
 mydata$Year  <- as.numeric(mydata$Year)
 
-# Date Only
+
 mydata <- mydata %>% 
-  mutate(Date.only = substring(mydata$date,1,10))
+  mutate(Date.only = substring(mydata$date,1,10))   # Date Only
 mydata$Date.only <- as.Date(mydata$Date.only,format="%Y-%m-%d")
 
-# Months by name
-mydata <- mydata %>% 
-  mutate(Months = month.abb[mydata$Month])
 
-# Day by names
 mydata <- mydata %>% 
-  mutate(Days = weekdays(mydata$Date.only, abbreviate = TRUE))
+  mutate(Months = month.abb[mydata$Month])      # Months by name
 
-# Hour
+
 mydata <- mydata %>% 
-  mutate(Hour = substring(mydata$date,12,13))
+  mutate(Days = weekdays(mydata$Date.only, abbreviate = TRUE)) # Day by names
+
+
+mydata <- mydata %>% 
+  mutate(Hour = substring(mydata$date,12,13))   # Hour
 mydata$Hour  <- as.numeric(mydata$Hour)
 datatable(mydata)
 
-# ==========================
-# Adding weeks
 mydata <- mydata %>% 
-  mutate(weekinyear = strftime(mydata$Date.only, format = "%V"))
+  mutate(weekinyear = strftime(mydata$Date.only, format = "%V"))  # Adding weeks
 mydata$weekinyear <- as.numeric(mydata$weekinyear)
 
 mydata <- mydata %>% 
   mutate(weekinmonth = as.integer(mydata$Day/7)+1)
 mydata$weekinmonth <- as.integer(mydata$Day/7)+1
 
-# ================
+
 mydata <-mydata[order(mydata$weekinmonth),] #it was week
 
 mydata <- mydata %>% 
@@ -116,15 +112,15 @@ plot.windrose <- function(data,
   
   }  
   
-  # Tidy up input data ----
+  
   n.in <- NROW(data)
-  dnu <- (is.na(data[[spd]]) | is.na(data[[dir]]))
+  dnu <- (is.na(data[[spd]]) | is.na(data[[dir]]))    # Tidy up input data ----
   data[[spd]][dnu] <- NA
   data[[dir]][dnu] <- NA
   
-  # The wind speed bins ----
+  
   if (missing(spdseq)){
-    spdseq <- seq(spdmin,spdmax,spdres)
+    spdseq <- seq(spdmin,spdmax,spdres)   # The wind speed bins ----
   } else {
     if (debug >0){
       cat("Using custom speed bins \n")
@@ -133,10 +129,10 @@ plot.windrose <- function(data,
   n.spd.seq <- length(spdseq)
   n.colors.in.range <- n.spd.seq - 1
   
-  # the color in the map
+  
   spd.colors <- colorRampPalette(brewer.pal(min(max(3, n.colors.in.range), 
                                                 min(9, n.colors.in.range)),
-                                            palette))(n.colors.in.range)
+                                            palette))(n.colors.in.range)  # the color in the map
   if (max(data[[spd]],na.rm = TRUE) > spdmax){
     spd.breaks <- c(spdseq, max(data[[spd]],na.rm = TRUE))
     spd.labels <- c(paste(c(spdseq[1:n.spd.seq-1]), '-', c(spdseq[2:n.spd.seq])),
@@ -148,22 +144,21 @@ plot.windrose <- function(data,
   }
   data$spd.binned <- cut(x = data[[spd]], breaks = spd.breaks, 
                          labels = spd.labels, ordered_result = TRUE)
-  # clean up the data
-  data. <- na.omit(data)
   
-  # figure out the wind direction bins
+  data. <- na.omit(data)    # clean up the data
+  
+
   dir.breaks <- c(-dirres/2,seq(dirres/2, 360-dirres/2, by = dirres),
                   360+dirres/2)  
   dir.labels <- c(paste(360-dirres/2,"-",dirres/2),
                   paste(seq(dirres/2, 360-3*dirres/2, by = dirres), "-",
                         seq(3*dirres/2, 360-dirres/2, by = dirres)),
                   paste(360-dirres/2,"-",dirres/2))
-  # assign each wind direction to a bin
+
   dir.binned <- cut(data[[dir]], breaks = dir.breaks, ordered_result = TRUE)
   levels(dir.binned) <- dir.labels
   data$dir.binned <- dir.binned
   
-  # Run debug if required ----
   if (debug>0){
     cat(dir.breaks,"\n")
     cat(dir.labels,"\n")
@@ -175,7 +170,7 @@ plot.windrose <- function(data,
     spd.colors = rev(spd.colors)
   }
   
-  # creating the plot
+
   p.windrose <- ggplot(data = data, aes(x = dir.binned, fill = spd.binned)) +
     geom_bar() +
     scale_x_discrete(drop = FALSE, labels = waiver()) +
@@ -183,17 +178,18 @@ plot.windrose <- function(data,
     scale_fill_manual(name = "Wind Speed (m/s)", values = spd.colors, drop = FALSE) +
     #theme_bw() +
     theme(axis.title.x = element_blank(),
-          panel.grid.major = element_line(colour="grey65"))
+          panel.grid.major = element_line(colour="grey65"))     # creating the plot
   if (!is.na(countmax)){
     p.windrose <- p.windrose +
       ylim(c(0,countmax))
   }
   print(p.windrose)  
-  # return the handle to the wind rose
-  return(p.windrose)
+ 
+  return(p.windrose)     # return the handle to the wind rose
 }
 plot.windrose(data = mydata, 
                    spd =mydata$ws , dir = mydata$wd)
+![Image of Yaktocat](https://raw.githubusercontent.com/amerie2013/OpenAir/master/Wind.bmp)  
 # ========
 # Groups # 
 # ========
@@ -210,4 +206,4 @@ p <- ggplot(By_Years, aes(x=Hour, y=no2, colour=Year, group=Year)) +
   facet_wrap(~ Days) +
   geom_point(position=pd, size=0.5, fill="white") 
 print(p)
-
+![Image of Yaktocat](https://raw.githubusercontent.com/amerie2013/OpenAir/master/By_Years.bmp) 
