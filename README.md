@@ -89,6 +89,9 @@ ggplot(mydatacalender, aes(monthweek, Days, fill = co)) +
        title = "CO Level in The Calender", 
        subtitle="1998-2005", 
        fill="CO Level")
+       
+![Image of Yaktocat](https://raw.githubusercontent.com/amerie2013/OpenAir/master/Calender.bmp)   
+
 # ==================================== #
 # Function of Wind Speed and Direction #
 # ==================================== #
